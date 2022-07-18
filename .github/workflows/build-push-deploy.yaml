@@ -80,6 +80,7 @@ jobs:
             type=raw,value=latest
           labels: |
             org.opencontainers.image.description="${{ github.event.head_commit.message }}"
+
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2.0.0
 
@@ -117,11 +118,13 @@ jobs:
           az aks get-credentials \
             --resource-group ${{ env.CLUSTER_RESOURCE_GROUP }} \
             --name ${{ env.CLUSTER_NAME }} --overwrite-existing --public-fqdn
+
       - name: Deploy using Helm
         run: |
           helm upgrade \
             --install ${{ github.event.repository.name }} helm-${{ github.event.repository.name }}/  \
             --set image.tag=${{ env.IMAGE_TAG }} --namespace ${{ env.CLUSTER_NAMESPACE }} --create-namespace \
             --wait
+
       - name: Verify Deployment
         run: kubectl rollout status deployment/${{ github.event.repository.name }} -n ${{ env.CLUSTER_NAMESPACE }}
