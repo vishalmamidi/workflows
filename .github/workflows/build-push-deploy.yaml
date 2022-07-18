@@ -108,16 +108,28 @@ jobs:
         with:
           fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
 
+      # below only needed if they are not installed in self hosted runners  
+      # - uses: elstudio/action-install-azure-cli@v1
+      # - uses: actions/setup-node@v3
+      #   with:
+      #     node-version: 14
+      # - run: sudo apt-get install unzip
+      # - uses: azure/setup-helm@v3
+      # - uses: Azure/setup-kubectl@v3
+      # above only needed if they are not installed in self hosted runners.
+
+
       - name: Azure Login
         uses: Azure/login@v1.4.5
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
 
+      # add "--public-fqdn" if private cluster
       - name: Set the target Azure Kubernetes Service (AKS) cluster.
         run: |
           az aks get-credentials \
             --resource-group ${{ env.CLUSTER_RESOURCE_GROUP }} \
-            --name ${{ env.CLUSTER_NAME }} --overwrite-existing --public-fqdn
+            --name ${{ env.CLUSTER_NAME }} --overwrite-existing
 
       - name: Deploy using Helm
         run: |
