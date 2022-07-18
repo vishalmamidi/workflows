@@ -61,15 +61,17 @@ jobs:
         run: chmod +x gradlew
 
       - name: Build with Gradle
+        id: build
         env:
           mongodb_host: localhost
         run: ./gradlew build
 
       - name: Deploy Coverage to GitHub Pages
-        if: success() || failure()
+        if: job.steps.build.status == success() || job.steps.build.status == failure()
         uses: JamesIves/github-pages-deploy-action@v4
         with:
           folder: build/reports/jacoco/test/html # The folder the action should deploy.
+        continue-on-error: true
 
       - name: Extract metadata (tags, labels) for registry
         id: meta
