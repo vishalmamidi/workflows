@@ -20,9 +20,9 @@ on:
 env:
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}
-  CLUSTER_RESOURCE_GROUP: my_group
-  CLUSTER_NAME: demo-aks
-  CLUSTER_NAMESPACE: demo-namespace
+  CLUSTER_RESOURCE_GROUP: MyResourceGroup
+  CLUSTER_NAME: MyManagedCluster
+  CLUSTER_NAMESPACE: demo
   IMAGE_TAG: 0.${{ github.RUN_NUMBER }}.0
 
 jobs:
