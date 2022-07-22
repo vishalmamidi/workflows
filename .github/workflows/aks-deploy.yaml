@@ -1,0 +1,65 @@
+name: deploy image to azure Kubernetes service
+
+on:
+  workflow_call:
+
+  #Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+  CLUSTER_RESOURCE_GROUP: MyResourceGroup
+  CLUSTER_NAME: MyManagedCluster
+  CLUSTER_NAMESPACE: demo
+  IMAGE_TAG: 0.${{ github.RUN_NUMBER }}.0
+
+jobs:
+  deploy:
+    if: ${{ inputs.deploy }}
+    name: deploy
+    needs:
+      - build-and-push-image
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: read
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
+
+      # below only needed if they are not installed in self hosted runners  
+      # - uses: elstudio/action-install-azure-cli@v1
+      # - uses: actions/setup-node@v3
+      #   with:
+      #     node-version: 14
+      # - run: sudo apt-get install unzip
+      # - uses: azure/setup-helm@v3
+      # - uses: Azure/setup-kubectl@v3
+      # above only needed if they are not installed in self hosted runners.
+
+
+      - name: Azure Login
+        uses: Azure/login@v1.4.5
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      # add "--public-fqdn" if private cluster
+      - name: Set the target Azure Kubernetes Service (AKS) cluster.
+        run: |
+          az aks get-credentials \
+            --resource-group ${{ env.CLUSTER_RESOURCE_GROUP }} \
+            --name ${{ env.CLUSTER_NAME }} --overwrite-existing
+
+      - name: Deploy using Helm
+        run: |
+          helm upgrade \
+            --install ${{ github.event.repository.name }} helm-${{ github.event.repository.name }}/  \
+            --set image.tag=${{ env.IMAGE_TAG }} --namespace ${{ env.CLUSTER_NAMESPACE }} --create-namespace \
+            --wait
+
+      - name: Verify Deployment
+        run: kubectl rollout status deployment/${{ github.event.repository.name }} -n ${{ env.CLUSTER_NAMESPACE }}
