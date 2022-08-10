@@ -10,8 +10,6 @@ env:
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}
   IMAGE_TAG: 1
-  IMAGE_TA1: 0.${{ github.RUN_NUMBER }}.0
-
 jobs:
   build-and-push-image:
     name: 🛠️
@@ -36,11 +34,23 @@ jobs:
             type=raw,value=latest
           labels: |
             org.opencontainers.image.description="${{ github.event.head_commit.message }}"
-      
+
+
+      - name: Extract metadata (tags, labels) for registry
+        id: meta2
+        uses: docker/metadata-action@master
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=raw,value=latest
+          labels: |
+            org.opencontainers.image.description="${{ github.event.head_commit.message }}"
+
+
       - name: echo
         run: |
           echo "tags: ${{ steps.meta.outputs.tags }}"
-          echo "labels: ${{ steps.meta.outputs.labels }}"
+          echo "tags: ${{ steps.meta2.outputs.tags }}"
 
       - name: Log in to the Container registry
         uses: docker/login-action@v1
@@ -79,10 +89,12 @@ jobs:
         run: docker images
         
       - name: tag image
-        run: docker tag spring-native:0.0.1-SNAPSHOT ${{ steps.meta.outputs.tags }}
+        run: |
+          docker tag spring-native:0.0.1-SNAPSHOT ${{ steps.meta.outputs.tags }}
+          docker tag spring-native:0.0.1-SNAPSHOT ${{ steps.meta2.outputs.tags }}
         
       - name: push image
-        run: docker push ${{ steps.meta.outputs.tags }}
+        run: docker push ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }} --all-tags
       
         
 #       - name: push image to other registry
