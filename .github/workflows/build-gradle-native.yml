@@ -74,4 +74,12 @@ jobs:
       - name: check image
         run: docker images
         
-        
+      - name: Push image
+        uses: akhilerm/tag-push-action@v2.0.0
+        with:
+          src: spring-native:0.0.1-SNAPSHOT
+          dst: |
+            ${{ steps.meta.outputs.tags }}
+            
+            
+            
