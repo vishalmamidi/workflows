@@ -73,13 +73,25 @@ jobs:
 
       - name: check image
         run: docker images
+    
+      - name: echo
+        run: |
+          echo ${{ steps.meta.outputs.tags }}
+          echo ${{ steps.meta.outputs.labels }}
         
-      - name: Push image
-        uses: akhilerm/tag-push-action@v2.0.0
-        with:
-          src: spring-native:0.0.1-SNAPSHOT
-          dst: |
-            ${{ steps.meta.outputs.tags }}
+      - name: tag image
+        run: docker tag spring-native:0.0.1-SNAPSHOT ${{ steps.meta.outputs.tags }}
+        
+      - name: push image
+        run: docker push ${{ steps.meta.outputs.tags }}
+      
+        
+#       - name: push image to other registry
+#         uses: akhilerm/tag-push-action@v2.0.0
+#         with:
+#           src: spring-native:0.0.1-SNAPSHOT
+#           dst: |
+#             ${{ steps.meta.outputs.tags }}
             
             
             
