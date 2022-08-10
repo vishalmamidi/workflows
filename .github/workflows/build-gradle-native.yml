@@ -70,3 +70,8 @@ jobs:
           labels: |
             org.opencontainers.image.description="${{ github.event.head_commit.message }}"
       
+
+      - name: check image
+        run: docker images
+        
+        
