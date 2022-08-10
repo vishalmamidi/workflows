@@ -8,6 +8,7 @@ on:
 
 env:
   REGISTRY: ghcr.io
+  
   IMAGE_NAME: ${{ github.repository }}
   IMAGE_TAG: 1
 jobs:
@@ -22,27 +23,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
         with:
-          fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
-
-      - id: string
-        uses: ASzc/change-string-case-action@v1
-        with:
-          string: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
-      - run: |
-          echo "${{ steps.string.outputs.lowercase }}"
-          
-          
-      - name: echo
-        run: |
-          echo "tags: ${{ steps.meta.outputs.tags }}"
-          echo "tags: ${{ steps.meta2.outputs.tags }}"
-
-      - name: Log in to the Container registry
-        uses: docker/login-action@v1
-        with:
-          registry: ${{ env.REGISTRY }}
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis       
 
       - name: Setup Java 17 (GraalVM)
         uses: graalvm/setup-graalvm@v1
@@ -75,19 +56,47 @@ jobs:
         
       - name: tag image
         run: |
-          docker tag spring-native:0.0.1-SNAPSHOT ${{ steps.string.outputs.lowercase }}:${{ env.IMAGE_TAG }}
-          docker tag spring-native:0.0.1-SNAPSHOT ${{ steps.string.outputs.lowercase }}:latest
+          docker tag spring-native:0.0.1-SNAPSHOT ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}
+          docker tag spring-native:0.0.1-SNAPSHOT ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
         
+        
+      - name: Log in to the Container registry
+        uses: docker/login-action@v1
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
       - name: push image
-        run: docker push ${{ steps.string.outputs.lowercase }} --all-tags
-      
+        run: |
+          docker push ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }} --all-tags
+
+
+      - name: Login Quay
+        uses: docker/login-action@v1
+        with:
+          registry: 'quay.io'
+          username: ${{ github.actor }}
+          password: ${{ secrets.QUAY_TOKEN }}
+        continue-on-error: true
+
+      - name: Login Dockerhub
+        uses: docker/login-action@v1
+        with:
+          username: ${{ github.actor }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+        continue-on-error: true
         
-#       - name: push image to other registry
-#         uses: akhilerm/tag-push-action@v2.0.0
-#         with:
-#           src: spring-native:0.0.1-SNAPSHOT
-#           dst: |
-#             ${{ steps.meta.outputs.tags }}
+      - name: Push image
+        uses: akhilerm/tag-push-action@v2.0.0
+        with:
+          src: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}
+          dst: |
+            docker.io/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}
+            docker.io/${{ env.IMAGE_NAME }}:latest
             
+            quay.io/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}
+            quay.io/${{ env.IMAGE_NAME }}:latest  
             
+        continue-on-error: true
             
