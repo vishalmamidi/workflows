@@ -26,6 +26,22 @@ jobs:
         with:
           fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
 
+      - name: Extract metadata (tags, labels) for registry
+        id: meta
+        uses: docker/metadata-action@master
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=raw,value=${{ env.IMAGE_TAG }}
+            type=raw,value=latest
+          labels: |
+            org.opencontainers.image.description="${{ github.event.head_commit.message }}"
+      
+      - name: echo
+        run: |
+          echo "tags: ${{ steps.meta.outputs.tags }}"
+          echo "labels: ${{ steps.meta.outputs.labels }}"
+
       - name: Log in to the Container registry
         uses: docker/login-action@v1
         with:
@@ -59,25 +75,8 @@ jobs:
           mongodb_host: localhost
         run: ./gradlew bootBuildImage
 
-      - name: Extract metadata (tags, labels) for registry
-        id: meta
-        uses: docker/metadata-action@master
-        with:
-          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
-          tags: |
-            type=raw,value=${{ env.IMAGE_TAG }}
-            type=raw,value=latest
-          labels: |
-            org.opencontainers.image.description="${{ github.event.head_commit.message }}"
-      
-
       - name: check image
         run: docker images
-    
-      - name: echo
-        run: |
-          echo ${{ steps.meta.outputs.tags }}
-          echo ${{ steps.meta.outputs.labels }}
         
       - name: tag image
         run: docker tag spring-native:0.0.1-SNAPSHOT ${{ steps.meta.outputs.tags }}
