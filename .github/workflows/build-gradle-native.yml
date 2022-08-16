@@ -10,7 +10,7 @@ env:
   REGISTRY: ghcr.io
   
   IMAGE_NAME: ${{ github.repository }}
-  IMAGE_TAG: 0.${{ github.RUN_NUMBER }}
+  IMAGE_TAG: 1.${{ github.RUN_NUMBER }}
 jobs:
   build-and-push-image:
     name: 🛠️
