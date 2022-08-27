@@ -12,3 +12,4 @@
 - [x] Publish to Github Pages included in 1st and 2nd
 - [ ] API Spec converter ( RAML, OAS2, OAS3 )
 - [ ] API Spec rdme <https://github.com/readmeio/rdme>
+- [x] Deploy react app to GitHub Pages
