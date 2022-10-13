@@ -32,7 +32,7 @@ jobs:
           sudo apt-get install pack-cli
       - name: Build
         run: |
-          pack build ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }} --tag latest --builder paketobuildpacks/builder:tiny
+          pack build ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }} --tag ${{ env.IMAGE_TAG }} --tag latest --builder paketobuildpacks/builder:tiny
 
 
       - name: Log in to the Container registry
