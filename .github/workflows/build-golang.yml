@@ -30,9 +30,13 @@ jobs:
           sudo add-apt-repository ppa:cncf-buildpacks/pack-cli
           sudo apt-get update
           sudo apt-get install pack-cli
+
       - name: Build
         run: |
           pack build ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }} --tag latest --builder paketobuildpacks/builder:tiny
+
+      - name: Build
+        run: docker images
 
 
       - name: Log in to the Container registry
