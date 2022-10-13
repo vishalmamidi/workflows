@@ -1,0 +1,49 @@
+name: build go image with build packs and push image to github container registry
+
+on:
+  workflow_call:
+
+  #Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+  IMAGE_TAG: 0.${{ github.RUN_NUMBER }}.0
+  
+jobs:
+  build-and-push-image:
+    name: 🛠️
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      packages: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis       
+
+      - name: Install pack CLI
+        run: |
+          sudo add-apt-repository ppa:cncf-buildpacks/pack-cli
+          sudo apt-get update
+          sudo apt-get install pack-cli
+      - name: Build
+        run: |
+          pack build ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest --builder paketobuildpacks/builder:tiny
+
+
+      - name: Log in to the Container registry
+        uses: docker/login-action@v1
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: push image
+        run: docker push ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }} --all-tags
+        
+        
+        
