@@ -77,8 +77,8 @@ jobs:
           tags: |
             type=raw,value=${{ env.IMAGE_TAG }}
             type=raw,value=latest
-            type=raw,value={{date 'dddd, MMMM Do YYYY, h:mm:ss a' tz='Asia/Kolkata'}}
             type=raw,value={{date 'dddd, MMMM Do YYYY, h:mm:ss a'}}	
+            type=raw,value={{date 'YYYY.MM.DD-hh.mm.ss' tz='Asia/Kolkata'}}
             
           labels: |
             org.opencontainers.image.description="${{ github.event.head_commit.message }}"
