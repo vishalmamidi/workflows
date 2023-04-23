@@ -1,0 +1,46 @@
+name: Quick Checks for K8s Configs Analysis
+
+on:
+  workflow_call:
+
+  #Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+jobs:   
+  k8s-manifist-analysis:
+    name: K8s Manifist Analysis
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
+
+      - id: string
+        uses: vishalmamidi/lowercase-action@v1
+        with:
+          string: ${{ github.event.repository.name }}
+
+#       - name: Install Datree
+#         run: curl https://get.datree.io | /bin/bash
+
+#       - name: Install Datree Helm plugin
+#         run: helm plugin install https://github.com/datreeio/helm-datree
+
+#       - name: Set Datree in offline mode
+#         run: datree config set offline local
+
+#       - name: Run Datree in offline mode
+#         run: helm datree test helm-${{ steps.string.outputs.lowercase }}
+
+#       not found a way to run this in offline mode
+      - name: Run Datree Policy Check
+        uses: datreeio/action-datree@main
+        with:
+          path: 'helm-${{ steps.string.outputs.lowercase }}'
+          cliArguments: ''
+          isHelmChart: true
+#           helmArguments: '--values values.yaml'
