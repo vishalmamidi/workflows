@@ -132,7 +132,7 @@ jobs:
 
 
       - name: Azure Login
-        uses: Azure/login@v1.4.7
+        uses: Azure/login@v1.6.0
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
 
