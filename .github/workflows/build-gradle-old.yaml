@@ -2,11 +2,6 @@ name: build and push image to github container registry
 
 on:
   workflow_call:
-    inputs:
-      RUNNER_TAG:
-        required: false
-        type: string
-        default: "dev"
 
   #Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
@@ -14,35 +9,18 @@ on:
 env:
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}
-  IMAGE_TAG:  0.${{ github.RUN_NUMBER }}.0  #//${{ github.sha }}
-
-  KAFKA_BOOTSTRAP_SERVERS: localhost:9092
-  REDIS_HOST: localhost
-  REDIS_PASSWORD: "password"
-  REDIS_PORT: 6379
-  REDIS_USERNAME: "user"
-  #SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
-  #SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-  MONGODB_URI: mongodb://root:password@localhost:27017
+  CLUSTER_RESOURCE_GROUP: my_group
+  CLUSTER_NAME: demo-aks
+  CLUSTER_NAMESPACE: demo-namespace
+  IMAGE_TAG: 0.${{ github.RUN_NUMBER }}.0
 
 jobs:
   build-and-push-image:
-    name: 🛠️
-    runs-on: ${{ inputs.RUNNER_TAG }}
-
-    services:
-      redis:
-        image: bitnami/redis:latest
-        env:
-          REDIS_PASSWORD: password
-        ports:
-          - 6379:6379
-
+    name: build
+    runs-on: ubuntu-latest
     permissions:
       contents: write
       packages: write
-      pages: write
-      id-token: write
 
     steps:
       - name: Checkout repository
@@ -50,61 +28,45 @@ jobs:
         with:
           fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
 
+      - name: Log in to the Container registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Setup Java 17 (GraalVM)
-        uses: graalvm/setup-graalvm@v1.2.1
+        uses: graalvm/setup-graalvm@v1
         with:
           version: 'latest'
           java-version: '17'
           components: 'native-image'
           github-token: ${{ secrets.GITHUB_TOKEN }}
-          set-java-home: 'true'
-          cache: 'gradle'
 
-      - name: Cache SonarQube packages
-        uses: actions/cache@v3
+      - name: Cache Gradle
+        uses: actions/cache@v4
         with:
-          path: ~/.sonar/cache
-          key: ${{ runner.os }}-sonar
-          restore-keys: ${{ runner.os }}-sonar
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-
 
       - name: Make gradlew executable
         run: chmod +x gradlew
 
       - name: Build with Gradle
         id: build
+        env:
+          mongodb_host: localhost
         run: ./gradlew build
 
-      - name: Upload Jacoco Test Converage Artifact
-        if: ${{ github.event_name == 'push' }}
-        uses: actions/upload-pages-artifact@v2
-        with:
-          path: './build/reports/jacoco/test/html/.' # The folder the action should deploy.
-        continue-on-error: true
-
-      # Deploy from a branch
       - name: Deploy Coverage to GitHub Pages
+        if: job.steps.build.status == success() || job.steps.build.status == failure()
         uses: JamesIves/github-pages-deploy-action@v4
         with:
           folder: build/reports/jacoco/test/html # The folder the action should deploy.
-        continue-on-error: true
-
-      # Deploy using GitHub Actions
-      - name: Setup Pages
-        uses: actions/configure-pages@v3
-        continue-on-error: true
-
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v2
-        continue-on-error: true
-
-      - name: SonarQube analyze
-        if: job.steps.build.status == success() || job.steps.build.status == failure()
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Needed to get PR information, if any
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
-        run: ./gradlew sonarqube --info
         continue-on-error: true
 
       - name: Extract metadata (tags, labels) for registry
@@ -115,7 +77,9 @@ jobs:
           tags: |
             type=raw,value=${{ env.IMAGE_TAG }}
             type=raw,value=latest
-            type=raw,value={{date 'dddd, MMMM Do YYYY, h:mm:ss a'}}
+            type=raw,value={{date 'dddd, MMMM Do YYYY, h:mm:ss a'}}	
+            type=raw,value={{date 'YYYY.MM.DD-hh.mm.ss' tz='Asia/Kolkata'}}
+            
           labels: |
             org.opencontainers.image.description="${{ github.event.head_commit.message }}"
 
@@ -152,7 +116,9 @@ jobs:
           dst: |
             docker.io/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}
             docker.io/${{ env.IMAGE_NAME }}:latest
+            
             quay.io/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}
-            quay.io/${{ env.IMAGE_NAME }}:latest
+            quay.io/${{ env.IMAGE_NAME }}:latest  
+            
         continue-on-error: true
 
