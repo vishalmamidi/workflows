@@ -6,13 +6,15 @@ on:
       RUNNER_TAG:
         required: false
         type: string
-        default: "dev"
+        default: "ubuntu-latest"
 
   #Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
 
 env:
   REGISTRY: ghcr.io
+  REGISTRY2: quay.io
+  REGISTRY3: docker.io
   IMAGE_NAME: ${{ github.repository }}
   IMAGE_TAG:  0.${{ github.RUN_NUMBER }}.0  #//${{ github.sha }}
 
@@ -98,6 +100,7 @@ jobs:
         uses: actions/deploy-pages@v2
         continue-on-error: true
 
+
       - name: SonarQube analyze
         if: job.steps.build.status == success() || job.steps.build.status == failure()
         env:
@@ -111,17 +114,34 @@ jobs:
         id: meta
         uses: docker/metadata-action@master
         with:
-          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          images: |
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+            ${{ env.REGISTRY2 }}/${{ env.IMAGE_NAME }}
+            ${{ env.REGISTRY3 }}/${{ env.IMAGE_NAME }}
+
           tags: |
             type=raw,value=${{ env.IMAGE_TAG }}
             type=raw,value=latest
-            type=raw,value={{date 'dddd, MMMM Do YYYY, h:mm:ss a'}}
+            type=raw,value={{date 'YYYYMMDD-hhmmss' tz='Asia/Tokyo'}}
           labels: |
             org.opencontainers.image.description="${{ github.event.head_commit.message }}"
 
-#       - name: Set up Docker Buildx
-#         uses: docker/setup-buildx-action@v2.5.0
+      - name: Login Quay
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY2 }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.QUAY_TOKEN }}
+        continue-on-error: true
 
+      - name: Login Dockerhub
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY3 }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+        continue-on-error: true
+        
       - name: Build and Push Image to Container Registry
         uses: docker/build-push-action@v5
         with:
@@ -130,29 +150,15 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
 
-      - name: Login Quay
-        uses: docker/login-action@v3
-        with:
-          registry: 'quay.io'
-          username: ${{ github.actor }}
-          password: ${{ secrets.QUAY_TOKEN }}
-        continue-on-error: true
 
-      - name: Login Dockerhub
-        uses: docker/login-action@v3
-        with:
-          username: ${{ github.actor }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
-        continue-on-error: true
-        
-      - name: Push image
-        uses: akhilerm/tag-push-action@v2.2.0
-        with:
-          src: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}
-          dst: |
-            docker.io/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}
-            docker.io/${{ env.IMAGE_NAME }}:latest
-            quay.io/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}
-            quay.io/${{ env.IMAGE_NAME }}:latest
-        continue-on-error: true
+      # - name: Push image
+      #   uses: akhilerm/tag-push-action@v2.2.0
+      #   with:
+      #     src: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}
+      #     dst: |
+      #       ${{ env.REGISTRY2 }}/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}
+      #       ${{ env.REGISTRY2 }}/${{ env.IMAGE_NAME }}:latest
+      #       ${{ env.REGISTRY3 }}/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}
+      #       ${{ env.REGISTRY3 }}/${{ env.IMAGE_NAME }}:latest
+      #   continue-on-error: true
 

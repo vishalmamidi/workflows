@@ -3,8 +3,8 @@
 ### Included workflows and planned
 
 
+- [x] Build with Gradle and Push to GitHub registry/DockerHub/Quey  [build-gradle.yml](.github/workflows/build-gradle.yml)
 - [x] Build Native Image with Gradle and Push to GitHub registry 
-- [x] Build with Gradle and Push to GitHub registry 
 - [ ] Build with Maven and Push to GitHub registry 
 - [x] Deploy image to Azure Kubernetes  
 - [ ] Deploy image to AWS Kubernetes
