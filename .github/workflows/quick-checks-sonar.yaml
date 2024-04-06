@@ -1,0 +1,67 @@
+name: Quick Checks SonarQube Static Code Analysis
+
+on:
+  workflow_call:
+
+  #Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+env:
+  MONGODB_URI: mongodb://root:password@loclhost:27017
+  REDIS_HOST: localhost
+  REDIS_PORT: 6379
+  REDIS_PASSWORD: password
+  KAFKA_BOOTSTRAP_SERVERS: localhost:9092
+
+jobs:   
+  static-code-analysis:
+    name: Static Code Analysis
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
+
+      - name: Setup Java 17 (GraalVM)
+        uses: graalvm/setup-graalvm@v1
+        with:
+          version: 'latest'
+          java-version: '17'
+          components: 'native-image'
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Cache Gradle
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-
+            
+      - name: Cache SonarQube packages
+        uses: actions/cache@v3
+        with:
+          path: ~/.sonar/cache
+          key: ${{ runner.os }}-sonar
+          restore-keys: ${{ runner.os }}-sonar
+            
+      - name: Make gradlew executable
+        run: chmod +x gradlew
+
+      - name: Build
+        run: ./gradlew build
+
+      - name: Analyze
+        if: job.steps.build.status == success() || job.steps.build.status == failure()
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Needed to get PR information, if any
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
+        run: ./gradlew sonarqube --info
+        continue-on-error: true

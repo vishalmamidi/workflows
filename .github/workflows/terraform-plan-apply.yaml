@@ -1,0 +1,77 @@
+name: Terraform Reusable workflow
+
+on:
+  workflow_call:
+    inputs:
+      ENVIRONMENT:
+        required: false
+        type: string
+        default: "ubuntu-latest"
+    secrets:
+      CLIENT_ID:
+        required: true
+      CLIENT_SECRET:
+        required: true      
+      SUBSCRIPTION_ID:
+        required: true
+      TENANT_ID:
+        required: true
+
+
+  #Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  ARM_CLIENT_ID: ${{ secrets.CLIENT_ID }}
+  ARM_CLIENT_SECRET: ${{ secrets.CLIENT_SECRET }}
+  ARM_TENANT_ID: ${{ secrets.TENANT_ID }}
+  ARM_SUBSCRIPTION_ID: ${{ secrets.SUBSCRIPTION_ID }}
+  
+jobs:
+  plan-and-apply:
+    name: 🛠️
+    runs-on: ubuntu-latest    
+    environment: 
+      name: ${{ inputs.ENVIRONMENT }}    
+
+    # Use the Bash shell regardless whether the GitHub Actions runner is ubuntu-latest, macos-latest, or windows-latest
+    defaults:
+      run:
+        shell: bash
+
+    steps:
+    # Checkout the repository to the GitHub Actions runner
+    - name: Checkout
+      uses: actions/checkout@v4
+
+    # Install the latest version of Terraform CLI
+    - name: Setup Terraform
+      uses: hashicorp/setup-terraform@v2
+
+    # Initialize a new or existing Terraform working directory by creating initial files, loading any remote state, downloading modules, etc.
+    - name: Terraform Init
+      run: terraform init
+
+    # Select Env workspace
+    - name: select env workspace
+      run: terraform workspace select ${{ inputs.ENVIRONMENT }}
+
+    # Checks that all Terraform configuration files adhere to a canonical format
+    
+    - name: Terraform Format
+      run: terraform fmt -check
+      continue-on-error: true
+
+    # Generates an execution plan for Terraform
+    - name: Terraform Plan
+      run: terraform plan --var-file="environment/${{ inputs.ENVIRONMENT }}.tfvars" -out="terraform.tfplan"
+
+      # On push to "main", build or change infrastructure according to Terraform configuration files
+    - name: Terraform Apply
+      run: terraform apply -auto-approve -input=false "terraform.tfplan" 
+
+
+
