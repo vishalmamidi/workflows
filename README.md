@@ -33,3 +33,4 @@
 - [ ] API Spec converter ( RAML, OAS2, OAS3 )
 - [ ] API Spec rdme <https://github.com/readmeio/rdme>
 
+- [ ] Lint code using [Super-Linter](https://github.com/super-linter/super-linter)
