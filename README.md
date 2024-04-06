@@ -35,4 +35,5 @@
 
 - [ ] Lint code using [Super-Linter](https://github.com/super-linter/super-linter)
 - [ ] Lint code using [MegaLinter](https://github.com/oxsecurity/megalinter)
-- [ ] scans for dependency changes or vulnerabilities or invalid licenses using [DependencyReview](https://github.com/actions/dependency-review-action) 
+- [ ] scans for dependency changes or vulnerabilities or invalid licenses using [DependencyReview](https://github.com/actions/dependency-review-action)
+      requires `GitHub Advanced Security` license
