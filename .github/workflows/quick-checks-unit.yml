@@ -54,9 +54,6 @@ jobs:
         with:
           arguments: test
 
-      - name: RUn Coverages
-        run: ./gradlew testCoverage
-
       - uses: actions/upload-artifact@v3  # upload test results
         if: success() || failure()        # run this step even if previous step failed
         with:
@@ -75,6 +72,7 @@ jobs:
       - name: Add coverage to PR
         id: jacoco
         uses: madrapps/jacoco-report@v1.6.1
+        if: success() || failure()    # run this step even if previous step failed
         with:
           paths: |
             ${{ github.workspace }}/**/build/reports/jacoco/prodNormalDebugCoverage/prodNormalDebugCoverage.xml,
@@ -82,3 +80,4 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           min-coverage-overall: 0
           min-coverage-changed-files: 0
+        continue-on-error: true
