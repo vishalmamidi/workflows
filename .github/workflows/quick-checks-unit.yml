@@ -15,6 +15,7 @@ env:
 
 permissions:
   contents: read
+  checks: write
 
 jobs:
   unit-tests:
@@ -59,12 +60,12 @@ jobs:
           name: test-results
           path: '**/build/test-results/test/TEST-*.xml'
 
-      # - name: Test Report
-      #   uses: dorny/test-reporter@v1.9.0
-      #   if: success() || failure()    # run this step even if previous step failed
-      #   with:
-      #     name: Java Tests                               # Name of the check run which will be created
-      #     path: '**/build/test-results/test/TEST-*.xml'  # Path to test results
-      #     reporter: java-junit                           # Format of test results
-
+      - name: Test Report
+        uses: dorny/test-reporter@v1.9.0
+        if: success() || failure()    # run this step even if previous step failed
+        with:
+          name: Java Tests                               # Name of the check run which will be created
+          path: '**/build/test-results/test/TEST-*.xml'  # Path to test results
+          reporter: java-junit                           # Format of test results
+        continue-on-error: true
 
