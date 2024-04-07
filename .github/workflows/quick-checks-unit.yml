@@ -13,9 +13,10 @@ env:
   REDIS_PASSWORD: password
   KAFKA_BOOTSTRAP_SERVERS: localhost:9092
 
-# permissions:
-#   contents: read
-permissions: write-all
+permissions:
+  contents: write
+  pull-requests: write
+  repository-projects: write
 
 jobs:
   unit-tests:
