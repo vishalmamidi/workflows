@@ -15,7 +15,8 @@ env:
 
 permissions:
   contents: read
-  checks: write
+  checks: write        # for dorny/test-reporter
+  pull-requests: write # for madrapps/jacoco-report
 
 jobs:
   unit-tests:
