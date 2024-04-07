@@ -1,0 +1,63 @@
+name: Quick Checks for Gradle unit tests 
+
+on:
+  workflow_call:
+
+  #Allows you to run this workflow manually from the Actions tab 
+  workflow_dispatch:
+
+env:
+  MONGODB_URI: mongodb://root:password@loclhost:27017
+  REDIS_HOST: localhost
+  REDIS_PORT: 6379
+  REDIS_PASSWORD: password
+  KAFKA_BOOTSTRAP_SERVERS: localhost:9092
+
+jobs:
+  unit-tests:
+    name: Unit Tests
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
+
+      - name: Setup Java 17 (GraalVM)
+        uses: graalvm/setup-graalvm@v1
+        with:
+          version: 'latest'
+          java-version: '17'
+          components: 'native-image'
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Cache Gradle
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-
+            
+      - name: Make gradlew executable
+        run: chmod +x gradlew
+
+      - name: Setup and execute Gradle 'test' task
+        uses: gradle/gradle-build-action@v2.9.0
+        with:
+          arguments: test
+
+      - name: Test Report
+        uses: dorny/test-reporter@v1.9.0
+        if: success() || failure()    # run this step even if previous step failed
+        with:
+          name: Java Tests                                      # Name of the check run which will be created
+          path: build/reports/jacoco/test/jacocoTestReport.xml  # Path to test results
+          reporter: java-junit                                  # Format of test results
+
+
