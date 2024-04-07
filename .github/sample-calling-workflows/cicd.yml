@@ -1,0 +1,36 @@
+name: CI/CD Workflow
+
+on:
+  push:
+    branches: [ main ]
+
+  #Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: "build"
+    permissions:
+      contents: read
+      packages: write
+      pages: write
+      id-token: write
+    uses: vishalmamidi/workflows/.github/workflows/build-gradle.yml@main
+    secrets: inherit
+
+  deploy-dev:
+    needs:
+      build
+    name: "dev"
+    permissions:
+      contents: read
+      packages: read
+    uses: vishalmamidi/workflows/.github/workflows/deploy-aks.yml@main
+    with:
+      RUNNER_TAG: "ubuntu-latest"
+      ENVIRONMENT: "dev"
+      CLUSTER_RESOURCE_GROUP: "CLUSTER_RESOURCE_GROUP"
+      CLUSTER_NAME: "CLUSTER_NAME"
+      CLUSTER_NAMESPACE: "CLUSTER_NAMESPACE"
+    secrets: inherit
+
