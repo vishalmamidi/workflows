@@ -41,7 +41,7 @@ jobs:
           - 6379:6379
 
     permissions:
-      contents: write
+      contents: read
       packages: write
       pages: write
       id-token: write
