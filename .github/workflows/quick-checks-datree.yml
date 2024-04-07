@@ -43,4 +43,4 @@ jobs:
 #           path: 'helm-${{ steps.string.outputs.lowercase }}'
 #           cliArguments: ''
 #           isHelmChart: true
-#           helmArguments: '--values values.yaml'
+#           helmArguments: '--values values.yml'
