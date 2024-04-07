@@ -107,6 +107,7 @@ jobs:
         uses: actions/deploy-pages@v4
         continue-on-error: true
 
+
       - name: SonarQube analyze
         if: job.steps.build.status == success() || job.steps.build.status == failure()
         env:
@@ -124,8 +125,8 @@ jobs:
         with:
           images: |
             ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
-            #${{ env.REGISTRY2 }}/${{ env.IMAGE_NAME }}
-            #${{ env.REGISTRY3 }}/${{ env.IMAGE_NAME }}
+            ${{ env.REGISTRY2 }}/${{ env.IMAGE_NAME }}
+            ${{ env.REGISTRY3 }}/${{ env.IMAGE_NAME }}
 
           tags: |
             type=raw,value=${{ env.IMAGE_TAG }}
