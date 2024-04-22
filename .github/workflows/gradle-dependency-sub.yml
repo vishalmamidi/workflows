@@ -1,0 +1,27 @@
+#Generates and submits a dependency graph for a Gradle project, 
+#allowing GitHub to alert about reported vulnerabilities in your project dependencies.
+#https://github.com/gradle/actions/blob/main/docs/dependency-submission.md
+name: Gradle Dependency Submission
+
+on:
+  workflow_call:
+
+  #Allows you to run this workflow manually from the Actions tab 
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  dependency-submission:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout sources
+      uses: actions/checkout@v4
+    - name: Setup Java
+      uses: actions/setup-java@v4
+      with:
+        distribution: 'temurin'
+        java-version: 17
+    - name: Generate and submit dependency graph
+      uses: gradle/actions/dependency-submission@v3
