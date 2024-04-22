@@ -23,6 +23,7 @@
 - [x] Quick checks for SonarQube Static Code Analysis Gradle [quick-checks-sonar.yml](.github/workflows/quick-checks-sonar.yml)
 - [x] Quick checks for SonarQube Static Code Analysis Go, Python, JS, TS, PHP etc [quick-checks-go.yml](.github/workflows/quick-checks-sonar-go.yml)
 - [x] Quick checks for Datree K8s Configs Analysis [quick-checks-datree.yml](.github/workflows/quick-checks-datree.yml)
+- [x] Quick checks for Generating and submitting a dependency graph for a Gradle project [gradle-dependency-sub.yml](.github/workflows/gradle-dependency-sub.yml)
 
 ### Azure 
 - [x] Deploy Java Gradle project to Azure Function Apps [deploy-functionapp-gradle.yml](.github/workflows/deploy-functionapp-gradle.yml)
