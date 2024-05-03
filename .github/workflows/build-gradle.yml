@@ -3,7 +3,7 @@ name: build and push image to github container registry
 on:
   workflow_call:
     inputs:
-      RUNNER_TAG:
+      RUNS_ON:
         required: false
         type: string
         default: "ubuntu-latest"
@@ -30,7 +30,7 @@ env:
 jobs:
   build-and-push-image:
     name: 🛠️
-    runs-on: ${{ inputs.RUNNER_TAG }}
+    runs-on: ${{ inputs.RUNS_ON }}
 
     services:
       redis:
