@@ -96,7 +96,7 @@ jobs:
         uses: docker/setup-buildx-action@v3.3.0
 
       - name: Build and Push Image to Container Registry
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v6
         with:
           context: .
           push: true
